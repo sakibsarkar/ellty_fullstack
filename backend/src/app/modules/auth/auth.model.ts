@@ -5,7 +5,7 @@ export interface IAuthentication {
   role?: "user" | "admin";
   firstName: string;
   lastName: string;
-  email: string;
+  userName: string;
   password: string;
 }
 
@@ -17,7 +17,7 @@ const AuthenticationSchema = new mongoose.Schema(
       required: false,
       default: "user",
     },
-    email: {
+    userName: {
       type: String,
       required: true,
     },
@@ -25,7 +25,6 @@ const AuthenticationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
- 
   },
   { timestamps: true }
 );

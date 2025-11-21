@@ -1,6 +1,6 @@
 export type TUser = {
   _id: string;
-  email: string;
+  userName: string;
   firstName: string;
   lastName: string;
   role: "user" | "admin";

@@ -12,20 +12,14 @@ router.post(
   postController.createPost
 );
 
-router.delete(
-  "/delete/:postId",
-  isAuthenticatedUser,
-  postController.deletePost
-);
 router.post(
   "/upload-image",
   isAuthenticatedUser,
   multerUpload.single("file"),
   postController.uploadPostImage
 );
-router.get("/get", isAuthenticatedUser, postController.getAllPosts);
-router.get("/get/profile/:userId", isAuthenticatedUser, postController.getUserProfilePostByUserId);
-router.get("/get/:id", isAuthenticatedUser, postController.getPostById);
+router.get("/get", postController.getAllPosts);
+
 const postRoute = router;
 
 export default postRoute;

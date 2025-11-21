@@ -49,7 +49,7 @@ export const updateUserProfileImage = catchAsyncError(async (req, res) => {
 export const updateUserInfo = catchAsyncError(async (req, res) => {
   const { body } = req;
   const user = req.user as JwtPayload;
-  ["email", "role", "image"].forEach((item) => delete body[item]);
+  ["userName", "role", "image"].forEach((item) => delete body[item]);
 
   const isExistUser = await User.findOne({ email: user.email });
   if (!isExistUser) {

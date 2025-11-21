@@ -1,7 +1,5 @@
-import { JwtPayload } from "jsonwebtoken";
 import { catchAsyncError } from "../../../utils/catchAsyncError";
 import sendResponse from "../../../utils/sendResponse";
-import { TUser } from "../user/user.interface";
 import { IPost } from "./post.interface";
 import postService from "./post.service";
 
@@ -65,22 +63,9 @@ const createPost = catchAsyncError(async (req, res) => {
   });
 });
 
-const deletePost = catchAsyncError(async (req, res) => {
-  const { postId } = req.params;
-  const user = req.user as JwtPayload;
-  const result = await postService.deletePost(postId, user as TUser);
-  sendResponse(res, {
-    message: "post deleted successfully",
-    success: true,
-    data: result,
-    statusCode: 200,
-  });
-});
-
 const getAllPosts = catchAsyncError(async (req, res) => {
   const query = req.query;
-  const user = req.user as TUser;
-  const { result, totalDoc } = await postService.getAllPosts(query, user);
+  const { result, totalDoc } = await postService.getAllPosts(query);
 
   sendResponse(res, {
     success: false,
@@ -88,41 +73,11 @@ const getAllPosts = catchAsyncError(async (req, res) => {
     message: "No Data Found",
     data: result,
     totalDoc,
-  });
-});
-const getUserProfilePostByUserId = catchAsyncError(async (req, res) => {
-  const query = req.query;
-  const userId = req.params.userId;
-  const { result, totalDoc } = await postService.getUserProfilePostByUserId(
-    query,
-    userId as string
-  );
-
-  sendResponse(res, {
-    success: false,
-    statusCode: 200,
-    message: "No Data Found",
-    data: result,
-    totalDoc,
-  });
-});
-
-const getPostById = catchAsyncError(async (req, res) => {
-  const { id } = req.params;
-  const result = await postService.getPostById(id);
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: "Data retrieved successfully",
-    data: result,
   });
 });
 
 export const postController = {
   createPost,
   uploadPostImage,
-  deletePost,
   getAllPosts,
-  getPostById,
-  getUserProfilePostByUserId,
 };

@@ -3,7 +3,6 @@ import authRoute from "../modules/auth/auth.route";
 
 import commentRoute from "../modules/comments/comment.route";
 import postRoute from "../modules/post/post.route";
-import reactionRoute from "../modules/reaction/raction.route";
 import userRoute from "../modules/user/user.route";
 
 // import userRoutes from "../modules/user/user.route";
@@ -22,11 +21,6 @@ const moduleRoute = [
   {
     path: "/post",
     route: postRoute,
-  },
-
-  {
-    path: "/reaction",
-    route: reactionRoute,
   },
 
   {

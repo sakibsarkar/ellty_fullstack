@@ -6,9 +6,6 @@ const PostSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    images: {
-      type: [String],
-    },
 
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,10 +13,6 @@ const PostSchema = new mongoose.Schema(
       required: true,
     },
 
-    reactionCount: {
-      type: Number,
-      default: 0,
-    },
     commentCount: {
       type: Number,
       default: 0,
