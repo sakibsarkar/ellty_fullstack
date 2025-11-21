@@ -9,6 +9,7 @@ router.post(
   commentController.createComment
 );
 router.get("/get/:id", commentController.getCommentsByPostId);
+router.get("/get/replies/:commentId", commentController.getCommentRepliesByCommentId);
 router.put("/update/:id", isAuthenticatedUser, commentController.updateComment);
 router.delete(
   "/delete/:id",

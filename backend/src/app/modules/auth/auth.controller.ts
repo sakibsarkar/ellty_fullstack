@@ -7,6 +7,7 @@ import { catchAsyncError } from "../../../utils/catchAsyncError";
 import { createAcessToken, createRefreshToken } from "../../../utils/jwtToken";
 import sendMessage from "../../../utils/sendMessage";
 import sendResponse from "../../../utils/sendResponse";
+import Config from "../../config";
 import User from "../user/user.model";
 import Authentication from "./auth.model";
 
@@ -29,18 +30,23 @@ export const createUserController = catchAsyncError(async (req, res) => {
 
   try {
     const isExistCustomer = await Authentication.findOne({
-      email: body.email,
+      userName: body.userName,
     }).session(session);
     if (isExistCustomer) {
       await session.abortTransaction();
       session.endSession();
-      throw new AppError(409, "User already exist with this user name");
+      return sendResponse(res, {
+        success: false,
+        data: null,
+        statusCode: 409,
+        message: "An account already exists with this User Name",
+      });
     }
 
-    const { email, password } = body;
+    const { userName, password } = body;
 
     // Create authentication details
-    const auth = await Authentication.create([{ email, password }], {
+    const auth = await Authentication.create([{ userName, password }], {
       session,
     });
 
@@ -52,7 +58,7 @@ export const createUserController = catchAsyncError(async (req, res) => {
     // Generate tokens
     const token = createAcessToken(
       {
-        email: auth[0].email,
+        userName: auth[0].userName,
         id: auth[0]._id.toString(),
         role: auth[0].role as string,
       },
@@ -60,7 +66,7 @@ export const createUserController = catchAsyncError(async (req, res) => {
     );
 
     const refreshToken = createRefreshToken({
-      email: auth[0].email,
+      userName: auth[0].userName,
       id: auth[0]._id,
       role: auth[0].role,
     });
@@ -68,14 +74,25 @@ export const createUserController = catchAsyncError(async (req, res) => {
     // Commit transaction
     await session.commitTransaction();
     session.endSession();
-
+    res
+      .cookie("accessToken", token, {
+        sameSite: Config.NODE_ENV === "production" ? "none" : "strict",
+        maxAge: 1000 * 60 * 60, // 1 hour
+        httpOnly: true,
+        secure: Config.NODE_ENV === "production",
+      })
+      .cookie("refreshToken", refreshToken, {
+        sameSite: Config.NODE_ENV === "production" ? "none" : "strict",
+        maxAge: 1000 * 24 * 60 * 60 * 30, // 30 days
+        httpOnly: true,
+        secure: Config.NODE_ENV === "production",
+      });
     // Send response
     res.json({
       data: user[0],
       message: "User created successfully",
       success: true,
       accessToken: token,
-      refreshToken,
     });
   } catch (error) {
     // Rollback transaction in case of error
@@ -107,7 +124,7 @@ export const genereteAccessToken = catchAsyncError(async (req, res) => {
     const decoded = jwt.verify(refreshToken, refreshTokenSecret);
     const user = (decoded as JwtPayload).user;
     const accessTOkenPayload = {
-      email: user.email,
+      userName: user.userName,
       id: user.id,
       role: user.role,
     };
@@ -123,6 +140,12 @@ export const genereteAccessToken = catchAsyncError(async (req, res) => {
     }
 
     const newAccessToken = createAcessToken(accessTOkenPayload, "1h");
+    res.cookie("accessToken", newAccessToken, {
+      sameSite: Config.NODE_ENV === "production" ? "none" : "strict",
+      maxAge: 1000 * 60 * 60, // 1 hour
+      httpOnly: true,
+      secure: Config.NODE_ENV === "production",
+    });
 
     sendResponse(res, {
       success: true,
@@ -136,13 +159,13 @@ export const genereteAccessToken = catchAsyncError(async (req, res) => {
 });
 
 export const loginController = catchAsyncError(async (req, res) => {
-  const { email, password } = req.body;
-  const isExistUser = await Authentication.findOne({ email });
+  const { userName, password } = req.body;
+  const isExistUser = await Authentication.findOne({ userName });
   if (!isExistUser) {
     return sendResponse(res, {
       success: false,
       data: null,
-      message: "No account found on this email",
+      message: "No account found on this user name",
       statusCode: 404,
     });
   }
@@ -161,7 +184,7 @@ export const loginController = catchAsyncError(async (req, res) => {
 
   const token = createAcessToken(
     {
-      email: isExistUser.email,
+      userName: isExistUser.userName,
       id: isExistUser._id.toString() as string,
       role: isExistUser.role as string,
     },
@@ -169,22 +192,51 @@ export const loginController = catchAsyncError(async (req, res) => {
   );
 
   const refreshToken = createRefreshToken({
-    email: isExistUser.email,
+    userName: isExistUser.userName,
     id: isExistUser._id,
     role: isExistUser.role,
   });
 
   const { password: pass, ...rest } = isExistUser?.toObject() || {};
-
+  res
+    .cookie("accessToken", token, {
+      sameSite: Config.NODE_ENV === "production" ? "none" : "strict",
+      maxAge: 1000 * 60 * 60, // 1 hour
+      httpOnly: true,
+      secure: Config.NODE_ENV === "production",
+    })
+    .cookie("refreshToken", refreshToken, {
+      sameSite: Config.NODE_ENV === "production" ? "none" : "strict",
+      maxAge: 1000 * 24 * 60 * 60 * 30, // 30 days
+      httpOnly: true,
+      secure: Config.NODE_ENV === "production",
+    });
   res.json({
     data: rest,
     message: "Login successfull",
     success: true,
     accessToken: token,
-    refreshToken,
   });
 });
+export const logout = catchAsyncError(async (_req, res) => {
+  res.clearCookie("accessToken", {
+    path: "/",
+    sameSite: Config.NODE_ENV === "production" ? "none" : "strict",
+    secure: Config.NODE_ENV === "production" ? true : false,
+  });
+  res.clearCookie("refreshToken", {
+    path: "/",
+    sameSite: Config.NODE_ENV === "production" ? "none" : "strict",
+    secure: Config.NODE_ENV === "production" ? true : false,
+  });
 
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    data: null,
+    message: "User logged out successfully",
+  });
+});
 export const changeRole = catchAsyncError(async (req, res) => {
   const id = req.params.id;
   const { role } = req.body;
@@ -198,7 +250,7 @@ export const changeRole = catchAsyncError(async (req, res) => {
     });
   }
   const result = await Authentication.findOneAndUpdate(
-    { email: isExistUser.email },
+    { userName: isExistUser.userName },
     { role }
   );
   sendResponse(res, {
@@ -276,7 +328,7 @@ export const forgotPassword = catchAsyncError(async (req, res) => {
   }
 
   const tokenPayload = {
-    email: user.email,
+    userName: user.userName,
     _id: user._id,
   };
 
@@ -385,12 +437,19 @@ export const recoverPassword = catchAsyncError(async (req, res) => {
   });
 
   const tokenPayload = {
-    email: user.email,
+    userName: user.userName,
     id: user._id.toString(),
     role: user.role as string,
   };
 
   const accessToken = createAcessToken(tokenPayload, "1h");
+
+  res.cookie("accessToken", accessToken, {
+    sameSite: Config.NODE_ENV === "production" ? "none" : "strict",
+    maxAge: 1000 * 60 * 60, // 1 hour
+    httpOnly: true,
+    secure: Config.NODE_ENV === "production",
+  });
 
   res.status(200).json({
     success: true,

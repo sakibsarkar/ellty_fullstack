@@ -7,6 +7,7 @@ import {
   forgotPassword,
   genereteAccessToken,
   loginController,
+  logout as logoutController,
   recoverPassword,
   resetPassword,
 } from "./auth.controller";
@@ -14,6 +15,7 @@ const router = Router();
 router.post("/register", createUserController);
 
 router.post("/login", loginController);
+router.post("/logout", isAuthenticatedUser, logoutController);
 router.get("/auth-state", isAuthenticatedUser, authSateController);
 router.post("/refreshToken", genereteAccessToken);
 router.put("/reset-password", isAuthenticatedUser, resetPassword);

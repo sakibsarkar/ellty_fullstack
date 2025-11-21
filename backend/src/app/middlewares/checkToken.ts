@@ -8,12 +8,7 @@ export const isValidToekn = async (
   next: NextFunction
 ) => {
   try {
-    const getToken = req.header("Authorization");
-
-    if (!getToken)
-      return res.status(400).json({ msg: "Invalid Authentication." });
-
-    const token = getToken.split(" ")[1];
+    const token = req.cookies.accessToken;
 
     if (!token) {
       return res.status(204).json({

@@ -1,27 +1,33 @@
 import QueryBuilder from "../../builder/QueryBuilder";
 import AppError from "../../errors/AppError";
 import { IAnyObject } from "../../interface/error";
-import Reaction from "../post/post.model";
+import { default as Post, default as Reaction } from "../post/post.model";
 import { IComment } from "./comment.interface";
 import Comment from "./comments.model";
 
 const createComment = async (comment: IComment) => {
-  const isPostExists = await Reaction.findById(comment.post);
+  const isPostExists = await Post.findById(comment.post);
   if (!isPostExists) {
     throw new AppError(404, "Post not found");
   }
   const result = await Comment.create(comment);
   isPostExists.commentCount = isPostExists.commentCount + 1;
+
+  if (comment.parentComment) {
+    await Comment.findByIdAndUpdate(comment.parentComment, {
+      $inc: { replyCount: 1 },
+    });
+  }
   await isPostExists.save();
   return result;
 };
 const getCommentsByPostId = async (postId: string, query: IAnyObject) => {
-  const isPostExists = await Reaction.findById(postId);
+  const isPostExists = await Post.findById(postId);
   if (!isPostExists) {
     throw new AppError(404, "Post not found");
   }
 
-  const model = Comment.find({ post: isPostExists._id })
+  const model = Comment.find({ post: isPostExists._id, parentComment: null })
     .populate("user")
     .sort("-createdAt");
 
@@ -31,6 +37,13 @@ const getCommentsByPostId = async (postId: string, query: IAnyObject) => {
   const result = await queryBuilder.modelQuery;
 
   return { result, totalDoc: totalDoc.totalCount };
+};
+
+const getCommentRepliesByCommentId = async (commentId: string) => {
+  const result = await Comment.find({ parentComment: commentId })
+    .populate("user")
+    .sort("-createdAt");
+  return result;
 };
 
 const updateComment = async (
@@ -91,4 +104,5 @@ export const commentService = {
   getCommentsByPostId,
   updateComment,
   deleteComment,
+  getCommentRepliesByCommentId,
 };

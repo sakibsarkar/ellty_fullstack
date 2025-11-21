@@ -6,6 +6,8 @@ const Config = {
   nodeEnv: process.env.NODE_ENV,
   jwt_access_secret: process.env.JWT_ACCESS_SECRET,
   jwt_refresh_secret: process.env.JWT_REFRESH_SECRET,
+  FRONTEND_BASE_URL: process.env.FRONTEND_BASE_URL,
+  NODE_ENV: process.env.NODE_ENV,
 };
 
 export default Config;

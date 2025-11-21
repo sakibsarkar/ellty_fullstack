@@ -4,13 +4,14 @@ import sendResponse from "../../../utils/sendResponse";
 import { commentService } from "./comment.service";
 
 const createComment = catchAsyncError(async (req, res) => {
-  const { comment } = req.body;
+  const { comment, parentComment } = req.body;
   const post = req.params.id;
   const user = req.user as JwtPayload;
   const payload = {
     post,
     comment,
     user: user._id,
+    parentComment: parentComment || undefined,
   };
   const result = await commentService.createComment(payload);
   sendResponse(res, {
@@ -33,6 +34,16 @@ const getCommentsByPostId = catchAsyncError(async (req, res) => {
     data: result,
     statusCode: 200,
     totalDoc,
+  });
+});
+const getCommentRepliesByCommentId = catchAsyncError(async (req, res) => {
+  const commentId = req.params.commentId;
+  const result = await commentService.getCommentRepliesByCommentId(commentId);
+  sendResponse(res, {
+    message: "comments retrieved successfully",
+    success: true,
+    data: result,
+    statusCode: 200,
   });
 });
 
@@ -66,4 +77,5 @@ export const commentController = {
   getCommentsByPostId,
   updateComment,
   deleteComment,
+  getCommentRepliesByCommentId,
 };

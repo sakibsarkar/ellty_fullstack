@@ -11,12 +11,7 @@ export const isAuthenticatedUser = async (
   next: NextFunction
 ) => {
   try {
-    const getToken = req.header("Authorization");
-
-    if (!getToken)
-      return res.status(401).json({ message: "Invalid Authentication." });
-
-    const token = getToken.split(" ")[1];
+    const token = req.cookies.accessToken;
 
     if (!token) {
       return res.status(401).json({ message: "Token not provided" });
@@ -25,8 +20,6 @@ export const isAuthenticatedUser = async (
       token,
       process.env.JWT_ACCESS_SECRET as string
     );
-    // console.log("desss", decoded);
-
     if (!decoded)
       return res.status(401).json({ message: "Invalid Authentication." });
 
@@ -34,7 +27,7 @@ export const isAuthenticatedUser = async (
       auth: decoded?.user?.id,
     });
     if (!user) return res.status(404).json({ message: "User does not exist." });
-    const auth = await Authentication.findOne({ email: user.email });
+    const auth = await Authentication.findOne({ userName: user.userName });
     if (!auth) return res.status(404).json({ message: "User does not exist." });
 
     // console.log("user =======", user);
@@ -44,6 +37,8 @@ export const isAuthenticatedUser = async (
 
     next();
   } catch (err: any) {
+    console.log(err);
+
     return res.status(401).json({ message: err.message });
   }
 };
@@ -79,7 +74,7 @@ export const isAuthenticatedUserOptional = async (
 
     if (!user) return next();
 
-    const auth = await Authentication.findOne({ email: user.email });
+    const auth = await Authentication.findOne({ userName: user.userName });
 
     if (!auth) return next();
 
