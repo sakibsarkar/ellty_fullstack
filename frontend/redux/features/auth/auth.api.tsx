@@ -1,10 +1,11 @@
 import { api } from "redux/api/appSlice";
 import type { TRole, TUser } from "types/user";
+import type { logout } from "./auth.slice";
 
 const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Create blog post
-    registerCustomer: builder.mutation({
+    register: builder.mutation({
       query: (post) => ({
         url: "/auth/register",
         method: "POST",
@@ -13,7 +14,7 @@ const userApi = api.injectEndpoints({
       invalidatesTags: ["user"],
     }),
     loginUser: builder.mutation({
-      query: (post: { email: string; password: string }) => ({
+      query: (post: { userName: string; password: string }) => ({
         url: "/auth/login",
         method: "POST",
         body: post,
@@ -36,6 +37,13 @@ const userApi = api.injectEndpoints({
       }),
       invalidatesTags: ["user"],
     }),
+    logout: builder.mutation({
+      query: () => ({
+        url: "/auth/logout",
+        method: "POST",
+      }),
+      invalidatesTags: ["user"],
+    }),
     getAuthor: builder.query<{ data: TUser }, string>({
       query: (token) => {
         return {
@@ -51,9 +59,10 @@ const userApi = api.injectEndpoints({
   }),
 });
 export const {
-  useRegisterCustomerMutation,
+  useRegisterMutation,
   useLoginUserMutation,
   useGetAuthorQuery,
   useChangeRoleMutation,
   useResetPasswordMutation,
+  useLogoutMutation
 } = userApi;

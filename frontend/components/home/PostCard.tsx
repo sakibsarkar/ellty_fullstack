@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { IPost } from "types/post";
+import PostCommentsByPostId from "./PostCommentsByPostId";
 
 export function PostCard({ post }: { post: IPost }) {
   const formattedDate = new Date(post.createdAt).toLocaleDateString("en-US", {
@@ -6,6 +8,8 @@ export function PostCard({ post }: { post: IPost }) {
     day: "numeric",
     year: "numeric",
   });
+
+  const [showComments, setShowComments] = useState(false);
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
@@ -47,17 +51,16 @@ export function PostCard({ post }: { post: IPost }) {
 
       {/* Footer with engagement metrics */}
       <div className="flex items-center gap-4 pt-3 border-t border-border text-xs text-muted-foreground">
-        <button className="hover:text-card-foreground transition-colors">
+        <button
+          onClick={() => setShowComments(!showComments)}
+          className="hover:text-card-foreground transition-colors px-3 py-2 hover:bg-muted-foreground/10 rounded-[4px] cursor-pointer"
+        >
           💬 {post.commentCount}{" "}
           {post.commentCount === 1 ? "Comment" : "Comments"}
         </button>
-        <button className="hover:text-card-foreground transition-colors">
-          ❤️ Like
-        </button>
-        <button className="hover:text-card-foreground transition-colors">
-          ↗️ Share
-        </button>
       </div>
+
+      {showComments ? <PostCommentsByPostId postId={post._id} /> : null}
     </div>
   );
 }

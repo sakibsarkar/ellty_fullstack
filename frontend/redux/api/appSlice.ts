@@ -5,23 +5,15 @@ import {
   type FetchArgs,
   type FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
-import Cookies from "js-cookie";
-import type { RootState } from "redux/store/store";
 import { setState, setToken, setUser } from "../features/auth/auth.slice";
 
 export const baseUrl =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+  import.meta.env.VITE_API_URL || "https://elltybookbackend.vercel.app/api/v1";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: baseUrl,
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-    return headers;
-  },
-  // credentials: 'include',
+
+  credentials: "include",
 });
 
 const baseQueryWithRefreshToken: BaseQueryFn<
@@ -33,14 +25,8 @@ const baseQueryWithRefreshToken: BaseQueryFn<
 
   if (result?.error?.status === 401) {
     try {
-      const refreshToken = Cookies.get("refreshToken") || "";
-
       const res = await fetch(`${baseUrl}/auth/refreshToken`, {
         method: "POST",
-
-        headers: {
-          Authorization: `Bearer ${refreshToken}`,
-        },
       });
 
       if (!res.ok) {

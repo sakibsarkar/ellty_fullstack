@@ -15,15 +15,24 @@ const commentApi = api.injectEndpoints({
       },
       providesTags: ["comment"],
     }),
+    getCommentRepliesByCommentId: builder.query<{ data: IComment[] }, string>({
+      query: (commentId) => {
+        return {
+          url: `/comment/get/replies/${commentId}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["comment"],
+    }),
     createComment: builder.mutation<
       { data: IComment[] },
-      { postId: string; comment: string }
+      { postId: string; comment: string; parentComment?: string }
     >({
-      query: ({ postId, comment }) => {
+      query: ({ postId, comment,parentComment }) => {
         return {
           url: `/comment/create/${postId}`,
           method: "POST",
-          body: { comment },
+          body: { comment, parentComment },
         };
       },
       invalidatesTags: ["comment"],
@@ -57,4 +66,6 @@ export const {
   useCreateCommentMutation,
   useDeteCommentMutation,
   useUpdateCommentMutation,
+  useGetCommentRepliesByCommentIdQuery,
+  useLazyGetCommentRepliesByCommentIdQuery,
 } = commentApi;

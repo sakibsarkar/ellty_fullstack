@@ -34,11 +34,7 @@ export const createUserController = catchAsyncError(async (req, res) => {
     if (isExistCustomer) {
       await session.abortTransaction();
       session.endSession();
-      return sendResponse(res, {
-        success: false,
-        data: null,
-        message: "An account already exists with this email",
-      });
+      throw new AppError(409, "User already exist with this user name");
     }
 
     const { email, password } = body;
